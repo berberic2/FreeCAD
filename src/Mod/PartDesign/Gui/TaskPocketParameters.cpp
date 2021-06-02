@@ -42,6 +42,7 @@ TaskPocketParameters::TaskPocketParameters(ViewProviderPocket *PocketView,QWidge
 {
     ui->offsetEdit->setToolTip(tr("Offset from face at which pocket will end"));
     ui->checkBoxReversed->setToolTip(tr("Reverses pocket direction"));
+    ui->checkBoxInverse->setToolTip(tr("Inverse operation, kind of trim"));
 
     // set the history path
     ui->lengthEdit->setEntryName(QByteArray("Length"));

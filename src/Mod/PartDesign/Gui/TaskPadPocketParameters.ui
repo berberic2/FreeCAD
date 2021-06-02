@@ -239,6 +239,13 @@
     </widget>
    </item>
    <item>
+     <widget class="QCheckBox" name="checkBoxInverse">
+       <property name="text">
+	 <string>Inverse</string>
+       </property>
+     </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Direction</string>

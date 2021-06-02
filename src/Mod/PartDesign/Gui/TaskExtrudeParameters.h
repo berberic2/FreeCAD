@@ -103,6 +103,7 @@ protected Q_SLOTS:
     void onZDirectionEditChanged(double);
     void onMidplaneChanged(bool);
     void onReversedChanged(bool);
+    void onInverseChanged(bool);
     void onFaceName(const QString& text);
     void onSelectFaceToggle(const bool checked = true);
     void onSelectShapeToggle(const bool checked = true);
@@ -128,6 +129,7 @@ protected:
     double getZDirection() const;
     bool   getReversed() const;
     bool   getMidplane() const;
+    bool   getInverse() const;
     int    getMode() const;
     QString getFaceName() const;
     void onSelectionChanged(const Gui::SelectionChanges& msg) override;

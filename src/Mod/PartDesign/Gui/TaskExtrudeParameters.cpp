@@ -84,6 +84,7 @@ void TaskExtrudeParameters::setupDialog()
 
     bool midplane = extrude->Midplane.getValue();
     bool reversed = extrude->Reversed.getValue();
+    bool inverse = extrude->Inverse.getValue();
 
     int index = extrude->Type.getValue(); // must extract value here, clear() kills it!
     App::DocumentObject* obj =  extrude->UpToFace.getValue();
@@ -145,6 +146,7 @@ void TaskExtrudeParameters::setupDialog()
     // According to bug #0000521 the reversed option
     // shouldn't be de-activated if the pad has a support face
     ui->checkBoxReversed->setChecked(reversed);
+    ui->checkBoxInverse->setChecked(inverse);
 
     // Set object labels
     if (obj && PartDesign::Feature::isDatum(obj)) {
@@ -236,6 +238,8 @@ void TaskExtrudeParameters::connectSlots()
         this, &TaskExtrudeParameters::onReversedChanged);
     connect(ui->checkBoxAllFaces, &QCheckBox::toggled,
         this, &TaskExtrudeParameters::onAllFacesToggled);
+    connect(ui->checkBoxInverse, &QCheckBox::toggled,
+          this, &TaskExtrudeParameters::onInverseChanged);
     connect(ui->changeMode, qOverload<int>(&QComboBox::currentIndexChanged),
         this, &TaskExtrudeParameters::onModeChanged);
     connect(ui->buttonFace, &QToolButton::toggled,
@@ -922,6 +926,15 @@ void TaskExtrudeParameters::onReversedChanged(bool on)
         extrude->Reversed.setValue(on);
         ui->checkBoxMidplane->setEnabled(!on);
         // update the direction
+        tryRecomputeFeature();
+        updateDirectionEdits();
+    }
+}
+
+void TaskExtrudeParameters::onInverseChanged(bool on)
+{
+    if (auto extrude = getObject<PartDesign::FeatureExtrude>()) {
+        extrude->Inverse.setValue(on);
         tryRecomputeFeature();
         updateDirectionEdits();
     }
