@@ -78,6 +78,7 @@ TaskPocketParameters::TaskPocketParameters(ViewProviderPocket *PocketView,QWidge
     Base::Quantity off = pcPocket->Offset.getQuantityValue();
     bool midplane = pcPocket->Midplane.getValue();
     bool reversed = pcPocket->Reversed.getValue();
+    bool outside = pcPocket->Outside.getValue();
     int index = pcPocket->Type.getValue(); // must extract value here, clear() kills it!
     App::DocumentObject* obj =  pcPocket->UpToFace.getValue();
     std::vector<std::string> subStrings = pcPocket->UpToFace.getSubValues();
@@ -95,6 +96,7 @@ TaskPocketParameters::TaskPocketParameters(ViewProviderPocket *PocketView,QWidge
     ui->offsetEdit->setValue(off);
     ui->checkBoxMidplane->setChecked(midplane);
     ui->checkBoxReversed->setChecked(reversed);
+    ui->checkBoxOutside->setChecked(outside);
 
     // Set object labels
     if (obj && PartDesign::Feature::isDatum(obj)) {
@@ -140,6 +142,8 @@ TaskPocketParameters::TaskPocketParameters(ViewProviderPocket *PocketView,QWidge
             this, SLOT(onMidplaneChanged(bool)));
     connect(ui->checkBoxReversed, SIGNAL(toggled(bool)),
             this, SLOT(onReversedChanged(bool)));
+    connect(ui->checkBoxOutside, SIGNAL(toggled(bool)),
+            this, SLOT(onOutsideChanged(bool)));
     connect(ui->changeMode, SIGNAL(currentIndexChanged(int)),
             this, SLOT(onModeChanged(int)));
     connect(ui->buttonFace, SIGNAL(clicked()),
@@ -168,11 +172,12 @@ void TaskPocketParameters::updateUI(int index)
 {
     // disable/hide everything unless we are sure we don't need it
     bool isLengthEditVisable  = false;
-    bool isLengthEdit2Visable = false;    
+    bool isLengthEdit2Visable = false;
     bool isOffsetEditVisable  = false;
     bool isOffsetEditEnabled  = true;
     bool isMidplateEnabled    = false;
     bool isReversedEnabled    = false;
+    bool isOutsideEnabled     = false;
     bool isFaceEditEnabled    = false;
 
     // dimension
@@ -186,6 +191,7 @@ void TaskPocketParameters::updateUI(int index)
         isMidplateEnabled = true;
         // Reverse only makes sense if Midplane is not true
         isReversedEnabled = !ui->checkBoxMidplane->isChecked();
+        isOutsideEnabled = true;
     }
     // through all
     else if (index == 1) {
@@ -193,6 +199,7 @@ void TaskPocketParameters::updateUI(int index)
         isOffsetEditEnabled = false; // offset may have some meaning for through all but it doesn't work
         isMidplateEnabled = true;
         isReversedEnabled = !ui->checkBoxMidplane->isChecked();
+        isOutsideEnabled = true;
     }
     // up to first
     else if (index == 2) {
@@ -201,6 +208,7 @@ void TaskPocketParameters::updateUI(int index)
             // It may work not quite as expected but useful if sketch oriented upside-down.
             // (may happen in bodies)
             // FIXME: Fix probably lies somewhere in IF block on line 125 of FeaturePocket.cpp
+        isOutsideEnabled = false;
     }
     // up to face
     else if (index == 3) {
@@ -210,12 +218,14 @@ void TaskPocketParameters::updateUI(int index)
         // Go into reference selection mode if no face has been selected yet
         if (ui->lineFaceName->property("FeatureName").isNull())
             onButtonFace(true);
+        isOutsideEnabled = false;
     }
     // two dimensions
     else {
         isLengthEditVisable = true;
         isLengthEdit2Visable = true;
-    }    
+        isOutsideEnabled = true;
+    }
 
     ui->lengthEdit->setVisible( isLengthEditVisable );
     ui->lengthEdit->setEnabled( isLengthEditVisable );
@@ -232,6 +242,8 @@ void TaskPocketParameters::updateUI(int index)
     ui->checkBoxMidplane->setEnabled( isMidplateEnabled );
 
     ui->checkBoxReversed->setEnabled( isReversedEnabled );
+
+    ui->checkBoxOutside->setEnabled( isOutsideEnabled );
 
     ui->buttonFace->setEnabled( isFaceEditEnabled );
     ui->lineFaceName->setEnabled( isFaceEditEnabled );
@@ -304,6 +316,13 @@ void TaskPocketParameters::onReversedChanged(bool on)
     recomputeFeature();
 }
 
+void TaskPocketParameters::onOutsideChanged(bool on)
+{
+    PartDesign::Pocket* pcPocket = static_cast<PartDesign::Pocket*>(vp->getObject());
+    pcPocket->Outside.setValue(on);
+    recomputeFeature();
+}
+
 void TaskPocketParameters::onModeChanged(int index)
 {
     PartDesign::Pocket* pcPocket = static_cast<PartDesign::Pocket*>(vp->getObject());
@@ -333,7 +352,7 @@ void TaskPocketParameters::onModeChanged(int index)
             pcPocket->Length.setValue(0.0);
             ui->lengthEdit->setValue(0.0);
             break;
-        default: 
+        default:
             oldLength = pcPocket->Length.getValue();
             pcPocket->Type.setValue("TwoLengths");
     }
@@ -400,6 +419,11 @@ bool   TaskPocketParameters::getReversed(void) const
 bool   TaskPocketParameters::getMidplane(void) const
 {
     return ui->checkBoxMidplane->isChecked();
+}
+
+bool   TaskPocketParameters::getOutside(void) const
+{
+    return ui->checkBoxOutside->isChecked();
 }
 
 int TaskPocketParameters::getMode(void) const
@@ -495,6 +519,7 @@ void TaskPocketParameters::apply()
     FCMD_OBJ_CMD(obj,"UpToFace = " << facename.toLatin1().data());
     FCMD_OBJ_CMD(obj,"Reversed = " << (getReversed()?1:0));
     FCMD_OBJ_CMD(obj,"Midplane = " << (getMidplane()?1:0));
+    FCMD_OBJ_CMD(obj,"Outside = " << (getOutside()?1:0));
     FCMD_OBJ_CMD(obj,"Offset = " << getOffset());
 }
 
