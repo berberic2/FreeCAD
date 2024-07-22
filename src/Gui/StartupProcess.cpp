@@ -172,7 +172,7 @@ void StartupProcess::setThemePaths()
 #else
     // Option to opt-in into using a Linux desktop icon theme.
     // https://forum.freecad.org/viewtopic.php?f=4&t=35624
-    bool themePaths = hTheme->GetBool("ThemeSearchPaths", false);
+    bool themePaths = hTheme->GetBool("ThemeSearchPaths", true);
     if (!themePaths) {
         QStringList searchPaths;
         searchPaths.prepend(QString::fromUtf8(":/icons"));
